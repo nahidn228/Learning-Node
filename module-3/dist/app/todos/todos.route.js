@@ -16,12 +16,20 @@ exports.todosRouter = void 0;
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const mongodb_1 = require("../../config/mongodb");
+const mongodb_2 = require("mongodb");
 exports.todosRouter = express_1.default.Router();
 const filePath = path_1.default.join(__dirname, "../../../db/todo.json");
 exports.todosRouter.get("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const db = yield mongodb_1.client.db("todosDB");
     const collection = yield db.collection("todos");
     const todos = yield collection.find().toArray();
+    res.json(todos);
+}));
+exports.todosRouter.get("/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const db = yield mongodb_1.client.db("todosDB");
+    const collection = yield db.collection("todos");
+    const todos = yield collection.findOne({ _id: new mongodb_2.ObjectId(id) });
     res.json(todos);
 }));
 exports.todosRouter.post("/create-todo", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -36,4 +44,20 @@ exports.todosRouter.post("/create-todo", (req, res) => __awaiter(void 0, void 0,
     });
     const todos = yield collection.find().toArray();
     res.json({ message: "Create new todo" });
+}));
+exports.todosRouter.put("/update-todo/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const db = yield mongodb_1.client.db("todosDB");
+    const collection = yield db.collection("todos");
+    const { title, description, priority, isCompleted } = req.body;
+    const filter = { _id: new mongodb_2.ObjectId(id) };
+    const updateData = yield collection.updateOne(filter, { $set: { title, description, priority, isCompleted } }, { upsert: true });
+    res.json(updateData);
+}));
+exports.todosRouter.delete("/delete-todo/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const id = req.params.id;
+    const db = yield mongodb_1.client.db("todosDB");
+    const collection = yield db.collection("todos");
+    const data = yield collection.deleteOne({ _id: new mongodb_2.ObjectId(id) });
+    res.json(data);
 }));
